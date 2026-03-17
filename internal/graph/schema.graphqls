@@ -1,21 +1,44 @@
 # GraphQL schema
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+}
 
 type Task {
   id: ID!
   title: String!
   description: String
-  status: String!
+  status: TaskStatus!
   createdAt: String!
   updatedAt: String!
   Deleted: Boolean!
 }
 
 type Query {
-  tasks(status: String): [Task!]!
+  tasks(filter: TaskFilter): [Task!]!
+  task(id: ID!): Task
 }
 
 type Mutation {
   createTask(title: String!, description: String, status: String!): Task!
   updateTask(id: ID!, title: String, description: String, status: String): Task!
   deleteTask(id: ID!): Boolean!
+}
+
+input TaskFilter {
+  status: TaskStatus
+  search: String
+}
+
+input CreateTaskInput {
+  title: String!
+  description: String
+  status: String!
+}
+
+input UpdateTaskInput {
+  title: String
+  description: String
+  status: String
 }

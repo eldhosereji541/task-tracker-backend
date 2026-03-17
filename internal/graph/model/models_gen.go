@@ -2,18 +2,20 @@
 
 package model
 
+type CreateTaskInput struct {
+	Title       string  `json:"title"`
+	Description *string `json:"description,omitempty"`
+	Status      string  `json:"status"`
+}
+
 type Mutation struct {
 }
 
 type Query struct {
 }
 
-type Task struct {
-	ID          string  `json:"id"`
-	Title       string  `json:"title"`
+type UpdateTaskInput struct {
+	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
-	Status      string  `json:"status"`
-	CreatedAt   string  `json:"createdAt"`
-	UpdatedAt   string  `json:"updatedAt"`
-	Deleted     bool    `json:"Deleted"`
+	Status      *string `json:"status,omitempty"`
 }

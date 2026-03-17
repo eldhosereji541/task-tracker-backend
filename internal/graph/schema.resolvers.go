@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/eldhosereji541/task-tracker-backend/internal/graph/model"
+	"github.com/eldhosereji541/task-tracker-backend/internal/model"
 )
 
 // CreateTask is the resolver for the createTask field.
@@ -28,8 +28,23 @@ func (r *mutationResolver) DeleteTask(ctx context.Context, id string) (bool, err
 }
 
 // Tasks is the resolver for the tasks field.
-func (r *queryResolver) Tasks(ctx context.Context, status *string) ([]*model.Task, error) {
+func (r *queryResolver) Tasks(ctx context.Context, filter *model.TaskFilter) ([]*model.Task, error) {
 	panic(fmt.Errorf("not implemented: Tasks - tasks"))
+}
+
+// Task is the resolver for the task field.
+func (r *queryResolver) Task(ctx context.Context, id string) (*model.Task, error) {
+	panic(fmt.Errorf("not implemented: Task - task"))
+}
+
+// CreatedAt is the resolver for the createdAt field.
+func (r *taskResolver) CreatedAt(ctx context.Context, obj *model.Task) (string, error) {
+	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+}
+
+// UpdatedAt is the resolver for the updatedAt field.
+func (r *taskResolver) UpdatedAt(ctx context.Context, obj *model.Task) (string, error) {
+	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
 }
 
 // Mutation returns MutationResolver implementation.
@@ -38,20 +53,9 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Task returns TaskResolver implementation.
+func (r *Resolver) Task() TaskResolver { return &taskResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
-}
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
-}
-*/
+type taskResolver struct{ *Resolver }

@@ -11,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/eldhosereji541/task-tracker-backend/internal/graph"
+	"github.com/eldhosereji541/task-tracker-backend/internal/repository"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -21,8 +22,12 @@ func main() {
 	if port == "" {
 		port = defaultPort
 	}
-
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	repo := repository.NewTaskRepository()
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{
+		Resolvers: &graph.Resolver{
+			TaskRepo: repo,
+		},
+	}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -35,6 +40,7 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
+	// GraphQL playground handler for testing and development.
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
 
