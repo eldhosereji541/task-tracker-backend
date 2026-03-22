@@ -8,58 +8,137 @@ package graph
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/eldhosereji541/task-tracker-backend/internal/auth"
 	"github.com/eldhosereji541/task-tracker-backend/internal/model"
 )
 
 // Register is the resolver for the Register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error) {
-	panic(fmt.Errorf("not implemented: Register - Register"))
+	user, err := r.TaskRepo.CreateUser(input.Name, input.Email, input.Password)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Generate JWT token for the new user (implementation not shown here).
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return &model.AuthPayload{
+		Token: token,
+		User:  *user,
+	}, nil
 }
 
 // Login is the resolver for the Login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthPayload, error) {
-	panic(fmt.Errorf("not implemented: Login - Login"))
+	user, storedPassword, ok := r.TaskRepo.GetUserByEmail(input.Email)
+	if !ok || storedPassword == "" {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	// if !auth.CheckPasswordHash(input.Password, storedPassword) {
+	// 	return nil, fmt.Errorf("invalid credentials")
+	// }
+
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return &model.AuthPayload{
+		Token: token,
+		User:  *user,
+	}, nil
 }
 
 // CreateTask is the resolver for the createTask field.
 func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error) {
-	panic(fmt.Errorf("not implemented: CreateTask - createTask"))
+	now := time.Now()
+
+	task := &model.Task{
+		Title:       input.Title,
+		Description: input.Description,
+		Status:      *input.Status,
+		Priority:    *input.Priority,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		Deleted:     false,
+	}
+
+	userID, ok := auth.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	task.User = &model.User{
+		ID: userID,
+	}
+
+	return r.TaskRepo.CreateTask(task)
 }
 
 // UpdateTask is the resolver for the updateTask field.
 func (r *mutationResolver) UpdateTask(ctx context.Context, id string, input model.UpdateTaskInput) (*model.Task, error) {
-	panic(fmt.Errorf("not implemented: UpdateTask - updateTask"))
+
+	userID, ok := auth.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	task, ok := r.TaskRepo.GetTaskByID(id)
+	if !ok {
+		return nil, fmt.Errorf("task not found")
+	}
+	if task.User == nil || task.User.ID != userID {
+		return nil, fmt.Errorf("forbidden")
+	}
+
+	if input.Title != nil {
+		task.Title = *input.Title
+	}
+	if input.Description != nil {
+		task.Description = input.Description
+	}
+	if input.Status != nil {
+		task.Status = model.TaskStatus(*input.Status)
+	}
+	if input.Priority != nil {
+		task.Priority = model.Priority(*input.Priority)
+	}
+
+	return r.TaskRepo.UpdateTask(task)
 }
 
 // DeleteTask is the resolver for the deleteTask field.
 func (r *mutationResolver) DeleteTask(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteTask - deleteTask"))
+	err := r.TaskRepo.DeleteTask(id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Tasks is the resolver for the tasks field.
 func (r *queryResolver) Tasks(ctx context.Context, filter *model.TaskFilter) ([]*model.Task, error) {
-	panic(fmt.Errorf("not implemented: Tasks - tasks"))
+	userID, ok := auth.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	return r.TaskRepo.GetTasks(userID, filter)
 }
 
 // Task is the resolver for the task field.
 func (r *queryResolver) Task(ctx context.Context, id string) (*model.Task, error) {
-	panic(fmt.Errorf("not implemented: Task - task"))
-}
-
-// Priority is the resolver for the priority field.
-func (r *createTaskInputResolver) Priority(ctx context.Context, obj *model.CreateTaskInput, data model.Priority) error {
-	panic(fmt.Errorf("not implemented: Priority - priority"))
-}
-
-// Priority is the resolver for the priority field.
-func (r *taskFilterResolver) Priority(ctx context.Context, obj *model.TaskFilter, data *model.Priority) error {
-	panic(fmt.Errorf("not implemented: Priority - priority"))
-}
-
-// Priority is the resolver for the priority field.
-func (r *updateTaskInputResolver) Priority(ctx context.Context, obj *model.UpdateTaskInput, data *model.Priority) error {
-	panic(fmt.Errorf("not implemented: Priority - priority"))
+	task, ok := r.TaskRepo.GetTaskByID(id)
+	if !ok {
+		return nil, nil
+	}
+	return task, nil
 }
 
 // Mutation returns MutationResolver implementation.
@@ -68,20 +147,8 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-// CreateTaskInput returns CreateTaskInputResolver implementation.
-func (r *Resolver) CreateTaskInput() CreateTaskInputResolver { return &createTaskInputResolver{r} }
-
-// TaskFilter returns TaskFilterResolver implementation.
-func (r *Resolver) TaskFilter() TaskFilterResolver { return &taskFilterResolver{r} }
-
-// UpdateTaskInput returns UpdateTaskInputResolver implementation.
-func (r *Resolver) UpdateTaskInput() UpdateTaskInputResolver { return &updateTaskInputResolver{r} }
-
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type createTaskInputResolver struct{ *Resolver }
-type taskFilterResolver struct{ *Resolver }
-type updateTaskInputResolver struct{ *Resolver }
 
 // !!! WARNING !!!
 // The code below was going to be deleted when updating resolvers. It has been copied here so you have
@@ -90,9 +157,20 @@ type updateTaskInputResolver struct{ *Resolver }
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
 /*
-	func (r *taskResolver) User(ctx context.Context, obj *model.Task) (*model1.User, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
+	func (r *createTaskInputResolver) Status(ctx context.Context, obj *model.CreateTaskInput, data model.TaskStatus) error {
+	panic(fmt.Errorf("not implemented: Status - status"))
 }
-func (r *Resolver) Task() TaskResolver { return &taskResolver{r} }
-type taskResolver struct{ *Resolver }
+func (r *createTaskInputResolver) Priority(ctx context.Context, obj *model.CreateTaskInput, data model.Priority) error {
+	panic(fmt.Errorf("not implemented: Priority - priority"))
+}
+func (r *updateTaskInputResolver) Status(ctx context.Context, obj *model.UpdateTaskInput, data *model.TaskStatus) error {
+	panic(fmt.Errorf("not implemented: Status - status"))
+}
+func (r *updateTaskInputResolver) Priority(ctx context.Context, obj *model.UpdateTaskInput, data *model.Priority) error {
+	panic(fmt.Errorf("not implemented: Priority - priority"))
+}
+func (r *Resolver) CreateTaskInput() CreateTaskInputResolver { return &createTaskInputResolver{r} }
+func (r *Resolver) UpdateTaskInput() UpdateTaskInputResolver { return &updateTaskInputResolver{r} }
+type createTaskInputResolver struct{ *Resolver }
+type updateTaskInputResolver struct{ *Resolver }
 */

@@ -31,9 +31,6 @@ type Config = graphql.Config[ResolverRoot, DirectiveRoot, ComplexityRoot]
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
-	CreateTaskInput() CreateTaskInputResolver
-	TaskFilter() TaskFilterResolver
-	UpdateTaskInput() UpdateTaskInputResolver
 }
 
 type DirectiveRoot struct {
@@ -90,16 +87,6 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Tasks(ctx context.Context, filter *model.TaskFilter) ([]*model.Task, error)
 	Task(ctx context.Context, id string) (*model.Task, error)
-}
-
-type CreateTaskInputResolver interface {
-	Priority(ctx context.Context, obj *model.CreateTaskInput, data model.Priority) error
-}
-type TaskFilterResolver interface {
-	Priority(ctx context.Context, obj *model.TaskFilter, data *model.Priority) error
-}
-type UpdateTaskInputResolver interface {
-	Priority(ctx context.Context, obj *model.UpdateTaskInput, data *model.Priority) error
 }
 
 type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
@@ -214,7 +201,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Task.CreatedAt(childComplexity), true
-	case "Task.Deleted":
+	case "Task.deleted":
 		if e.ComplexityRoot.Task.Deleted == nil {
 			break
 		}
@@ -269,7 +256,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.User.CreatedAt(childComplexity), true
-	case "User.Deleted":
+	case "User.deleted":
 		if e.ComplexityRoot.User.Deleted == nil {
 			break
 		}
@@ -615,8 +602,8 @@ func (ec *executionContext) fieldContext_AuthPayload_user(_ context.Context, fie
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "Deleted":
-				return ec.fieldContext_User_Deleted(ctx, field)
+			case "deleted":
+				return ec.fieldContext_User_deleted(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -759,8 +746,8 @@ func (ec *executionContext) fieldContext_Mutation_createTask(ctx context.Context
 				return ec.fieldContext_Task_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Task_updatedAt(ctx, field)
-			case "Deleted":
-				return ec.fieldContext_Task_Deleted(ctx, field)
+			case "deleted":
+				return ec.fieldContext_Task_deleted(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
 		},
@@ -820,8 +807,8 @@ func (ec *executionContext) fieldContext_Mutation_updateTask(ctx context.Context
 				return ec.fieldContext_Task_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Task_updatedAt(ctx, field)
-			case "Deleted":
-				return ec.fieldContext_Task_Deleted(ctx, field)
+			case "deleted":
+				return ec.fieldContext_Task_deleted(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
 		},
@@ -922,8 +909,8 @@ func (ec *executionContext) fieldContext_Query_tasks(ctx context.Context, field 
 				return ec.fieldContext_Task_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Task_updatedAt(ctx, field)
-			case "Deleted":
-				return ec.fieldContext_Task_Deleted(ctx, field)
+			case "deleted":
+				return ec.fieldContext_Task_deleted(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
 		},
@@ -983,8 +970,8 @@ func (ec *executionContext) fieldContext_Query_task(ctx context.Context, field g
 				return ec.fieldContext_Task_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Task_updatedAt(ctx, field)
-			case "Deleted":
-				return ec.fieldContext_Task_Deleted(ctx, field)
+			case "deleted":
+				return ec.fieldContext_Task_deleted(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
 		},
@@ -1290,8 +1277,8 @@ func (ec *executionContext) fieldContext_Task_user(_ context.Context, field grap
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "Deleted":
-				return ec.fieldContext_User_Deleted(ctx, field)
+			case "deleted":
+				return ec.fieldContext_User_deleted(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1357,12 +1344,12 @@ func (ec *executionContext) fieldContext_Task_updatedAt(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_Deleted(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_deleted(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Task_Deleted,
+		ec.fieldContext_Task_deleted,
 		func(ctx context.Context) (any, error) {
 			return obj.Deleted, nil
 		},
@@ -1373,7 +1360,7 @@ func (ec *executionContext) _Task_Deleted(ctx context.Context, field graphql.Col
 	)
 }
 
-func (ec *executionContext) fieldContext_Task_Deleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Task_deleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
@@ -1531,12 +1518,12 @@ func (ec *executionContext) fieldContext_User_updatedAt(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _User_Deleted(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_deleted(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_User_Deleted,
+		ec.fieldContext_User_deleted,
 		func(ctx context.Context) (any, error) {
 			return obj.Deleted, nil
 		},
@@ -1547,7 +1534,7 @@ func (ec *executionContext) _User_Deleted(ctx context.Context, field graphql.Col
 	)
 }
 
-func (ec *executionContext) fieldContext_User_Deleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_deleted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -3040,20 +3027,18 @@ func (ec *executionContext) unmarshalInputCreateTaskInput(ctx context.Context, o
 			it.Description = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalNTaskStatus2ᚖgithubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐTaskStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Status = data
 		case "priority":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priority"))
-			data, err := ec.unmarshalNPriority2githubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐPriority(ctx, v)
+			data, err := ec.unmarshalNPriority2ᚖgithubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐPriority(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			if err = ec.Resolvers.CreateTaskInput().Priority(ctx, &it, data); err != nil {
-				return it, err
-			}
+			it.Priority = data
 		}
 	}
 	return it, nil
@@ -3171,9 +3156,7 @@ func (ec *executionContext) unmarshalInputTaskFilter(ctx context.Context, obj an
 			if err != nil {
 				return it, err
 			}
-			if err = ec.Resolvers.TaskFilter().Priority(ctx, &it, data); err != nil {
-				return it, err
-			}
+			it.Priority = data
 		case "search":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("search"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -3220,7 +3203,7 @@ func (ec *executionContext) unmarshalInputUpdateTaskInput(ctx context.Context, o
 			it.Description = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOTaskStatus2ᚖgithubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐTaskStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3231,9 +3214,7 @@ func (ec *executionContext) unmarshalInputUpdateTaskInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
-			if err = ec.Resolvers.UpdateTaskInput().Priority(ctx, &it, data); err != nil {
-				return it, err
-			}
+			it.Priority = data
 		}
 	}
 	return it, nil
@@ -3507,8 +3488,8 @@ func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "Deleted":
-			out.Values[i] = ec._Task_Deleted(ctx, field, obj)
+		case "deleted":
+			out.Values[i] = ec._Task_deleted(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3571,8 +3552,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "Deleted":
-			out.Values[i] = ec._User_Deleted(ctx, field, obj)
+		case "deleted":
+			out.Values[i] = ec._User_deleted(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4007,6 +3988,29 @@ func (ec *executionContext) marshalNPriority2githubᚗcomᚋeldhosereji541ᚋtas
 	return res
 }
 
+func (ec *executionContext) unmarshalNPriority2ᚖgithubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐPriority(ctx context.Context, v any) (*model.Priority, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := model.Priority(tmp)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPriority2ᚖgithubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐPriority(ctx context.Context, sel ast.SelectionSet, v *model.Priority) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	_ = sel
+	res := graphql.MarshalString(string(*v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNRegisterInput2githubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐRegisterInput(ctx context.Context, v any) (model.RegisterInput, error) {
 	res, err := ec.unmarshalInputRegisterInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4067,6 +4071,29 @@ func (ec *executionContext) unmarshalNTaskStatus2githubᚗcomᚋeldhosereji541�
 func (ec *executionContext) marshalNTaskStatus2githubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐTaskStatus(ctx context.Context, sel ast.SelectionSet, v model.TaskStatus) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNTaskStatus2ᚖgithubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐTaskStatus(ctx context.Context, v any) (*model.TaskStatus, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := model.TaskStatus(tmp)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTaskStatus2ᚖgithubᚗcomᚋeldhosereji541ᚋtaskᚑtrackerᚑbackendᚋinternalᚋmodelᚐTaskStatus(ctx context.Context, sel ast.SelectionSet, v *model.TaskStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	_ = sel
+	res := graphql.MarshalString(string(*v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")

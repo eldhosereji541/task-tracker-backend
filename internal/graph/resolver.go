@@ -1,6 +1,8 @@
 package graph
 
-import "github.com/eldhosereji541/task-tracker-backend/internal/repository"
+import (
+	"github.com/eldhosereji541/task-tracker-backend/internal/store"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -8,5 +10,5 @@ import "github.com/eldhosereji541/task-tracker-backend/internal/repository"
 // here.
 
 type Resolver struct {
-	TaskRepo repository.TaskRepository
+	TaskRepo store.TaskStore
 }

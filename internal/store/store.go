@@ -9,6 +9,18 @@ import (
 	"github.com/google/uuid"
 )
 
+type TaskStore interface {
+	CreateTask(task *model.Task) (*model.Task, error)
+	GetTaskByID(id string) (*model.Task, bool)
+	GetTasks(userID string, filter *model.TaskFilter) ([]*model.Task, error)
+	UpdateTask(task *model.Task) (*model.Task, error)
+	DeleteTask(id string) error
+	// user related methods
+	CreateUser(name, email, hashedPassword string) (*model.User, error)
+	GetUserByID(id string) (*model.User, bool)
+	GetUserByEmail(email string) (*model.User, string, bool)
+}
+
 type Store struct {
 	mu    sync.RWMutex
 	tasks map[string]*model.Task
@@ -17,7 +29,7 @@ type Store struct {
 	userPasswords map[string]string
 }
 
-func NewStore() *Store {
+func NewStore() TaskStore {
 	return &Store{
 		tasks:         make(map[string]*model.Task),
 		users:         make(map[string]*model.User),

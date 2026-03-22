@@ -19,7 +19,7 @@ type User {
   email: String!
   createdAt: Time!
   updatedAt: Time!
-  Deleted: Boolean!
+  deleted: Boolean!
 }
 
 type Task {
@@ -31,7 +31,7 @@ type Task {
   user: User!
   createdAt: Time!
   updatedAt: Time!
-  Deleted: Boolean!
+  deleted: Boolean!
 }
 
 type Query {
@@ -72,13 +72,13 @@ input TaskFilter {
 input CreateTaskInput {
   title: String!
   description: String
-  status: String!
+  status: TaskStatus!
   priority: Priority!
 }
 
 input UpdateTaskInput {
   title: String
   description: String
-  status: String
+  status: TaskStatus
   priority: Priority
 }

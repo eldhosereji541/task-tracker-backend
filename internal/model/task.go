@@ -38,15 +38,15 @@ type TaskFilter struct {
 }
 
 type CreateTaskInput struct {
-	Title       string  `json:"title"`
-	Description *string `json:"description,omitempty"`
-	Status      string  `json:"status"`
-	Priority    string  `json:"priority"`
+	Title       string      `json:"title"`
+	Description *string     `json:"description,omitempty"`
+	Status      *TaskStatus `json:"status"`
+	Priority    *Priority   `json:"priority"`
 }
 
 type UpdateTaskInput struct {
-	Title       *string `json:"title,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Status      *string `json:"status,omitempty"`
-	Priority    *string `json:"priority,omitempty"`
+	Title       *string     `json:"title,omitempty"`
+	Description *string     `json:"description,omitempty"`
+	Status      *TaskStatus `json:"status,omitempty"`
+	Priority    *Priority   `json:"priority,omitempty"`
 }

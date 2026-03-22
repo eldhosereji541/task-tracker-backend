@@ -10,8 +10,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/eldhosereji541/task-tracker-backend/internal/auth"
 	"github.com/eldhosereji541/task-tracker-backend/internal/graph"
-	"github.com/eldhosereji541/task-tracker-backend/internal/repository"
+	"github.com/eldhosereji541/task-tracker-backend/internal/store"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -22,7 +23,7 @@ func main() {
 	if port == "" {
 		port = defaultPort
 	}
-	repo := repository.NewTaskRepository()
+	repo := store.NewStore()
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
 		Resolvers: &graph.Resolver{
 			TaskRepo: repo,
@@ -42,7 +43,7 @@ func main() {
 
 	// GraphQL playground handler for testing and development.
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	http.Handle("/query", auth.AuthMiddleware(srv))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
