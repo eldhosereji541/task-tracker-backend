@@ -1,8 +1,25 @@
 # GraphQL schema
+
+scalar Time
+
 enum TaskStatus {
   TODO
   IN_PROGRESS
   COMPLETED
+}
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  createdAt: Time!
+  updatedAt: Time!
+  Deleted: Boolean!
 }
 
 type Task {
@@ -10,8 +27,10 @@ type Task {
   title: String!
   description: String
   status: TaskStatus!
-  createdAt: String!
-  updatedAt: String!
+  priority: Priority!
+  user: User!
+  createdAt: Time!
+  updatedAt: Time!
   Deleted: Boolean!
 }
 
@@ -20,14 +39,33 @@ type Query {
   task(id: ID!): Task
 }
 
+type AuthPayload {
+  token: String!
+  user:  User!
+}
+
 type Mutation {
-  createTask(title: String!, description: String, status: String!): Task!
-  updateTask(id: ID!, title: String, description: String, status: String): Task!
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!):       AuthPayload!
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(id: ID!, input: UpdateTaskInput!): Task!
   deleteTask(id: ID!): Boolean!
+}
+
+input RegisterInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
 }
 
 input TaskFilter {
   status: TaskStatus
+  priority: Priority
   search: String
 }
 
@@ -35,10 +73,12 @@ input CreateTaskInput {
   title: String!
   description: String
   status: String!
+  priority: Priority!
 }
 
 input UpdateTaskInput {
   title: String
   description: String
   status: String
+  priority: Priority
 }

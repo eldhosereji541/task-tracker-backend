@@ -12,13 +12,23 @@ import (
 	"github.com/eldhosereji541/task-tracker-backend/internal/model"
 )
 
+// Register is the resolver for the Register field.
+func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error) {
+	panic(fmt.Errorf("not implemented: Register - Register"))
+}
+
+// Login is the resolver for the Login field.
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthPayload, error) {
+	panic(fmt.Errorf("not implemented: Login - Login"))
+}
+
 // CreateTask is the resolver for the createTask field.
-func (r *mutationResolver) CreateTask(ctx context.Context, title string, description *string, status string) (*model.Task, error) {
+func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error) {
 	panic(fmt.Errorf("not implemented: CreateTask - createTask"))
 }
 
 // UpdateTask is the resolver for the updateTask field.
-func (r *mutationResolver) UpdateTask(ctx context.Context, id string, title *string, description *string, status *string) (*model.Task, error) {
+func (r *mutationResolver) UpdateTask(ctx context.Context, id string, input model.UpdateTaskInput) (*model.Task, error) {
 	panic(fmt.Errorf("not implemented: UpdateTask - updateTask"))
 }
 
@@ -37,14 +47,19 @@ func (r *queryResolver) Task(ctx context.Context, id string) (*model.Task, error
 	panic(fmt.Errorf("not implemented: Task - task"))
 }
 
-// CreatedAt is the resolver for the createdAt field.
-func (r *taskResolver) CreatedAt(ctx context.Context, obj *model.Task) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+// Priority is the resolver for the priority field.
+func (r *createTaskInputResolver) Priority(ctx context.Context, obj *model.CreateTaskInput, data model.Priority) error {
+	panic(fmt.Errorf("not implemented: Priority - priority"))
 }
 
-// UpdatedAt is the resolver for the updatedAt field.
-func (r *taskResolver) UpdatedAt(ctx context.Context, obj *model.Task) (string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+// Priority is the resolver for the priority field.
+func (r *taskFilterResolver) Priority(ctx context.Context, obj *model.TaskFilter, data *model.Priority) error {
+	panic(fmt.Errorf("not implemented: Priority - priority"))
+}
+
+// Priority is the resolver for the priority field.
+func (r *updateTaskInputResolver) Priority(ctx context.Context, obj *model.UpdateTaskInput, data *model.Priority) error {
+	panic(fmt.Errorf("not implemented: Priority - priority"))
 }
 
 // Mutation returns MutationResolver implementation.
@@ -53,9 +68,31 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-// Task returns TaskResolver implementation.
-func (r *Resolver) Task() TaskResolver { return &taskResolver{r} }
+// CreateTaskInput returns CreateTaskInputResolver implementation.
+func (r *Resolver) CreateTaskInput() CreateTaskInputResolver { return &createTaskInputResolver{r} }
+
+// TaskFilter returns TaskFilterResolver implementation.
+func (r *Resolver) TaskFilter() TaskFilterResolver { return &taskFilterResolver{r} }
+
+// UpdateTaskInput returns UpdateTaskInputResolver implementation.
+func (r *Resolver) UpdateTaskInput() UpdateTaskInputResolver { return &updateTaskInputResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type createTaskInputResolver struct{ *Resolver }
+type taskFilterResolver struct{ *Resolver }
+type updateTaskInputResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *taskResolver) User(ctx context.Context, obj *model.Task) (*model1.User, error) {
+	panic(fmt.Errorf("not implemented: User - user"))
+}
+func (r *Resolver) Task() TaskResolver { return &taskResolver{r} }
 type taskResolver struct{ *Resolver }
+*/

@@ -2,20 +2,8 @@
 
 package model
 
-type CreateTaskInput struct {
-	Title       string  `json:"title"`
-	Description *string `json:"description,omitempty"`
-	Status      string  `json:"status"`
-}
-
 type Mutation struct {
 }
 
 type Query struct {
-}
-
-type UpdateTaskInput struct {
-	Title       *string `json:"title,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Status      *string `json:"status,omitempty"`
 }
