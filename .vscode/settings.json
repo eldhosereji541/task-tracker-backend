@@ -1,0 +1,6 @@
+{
+    "task.allowAutomaticTasks": "on",
+    "docker.composeFile": "${workspaceFolder}/docker-compose.yml",
+    "docker.context": "default",
+    "docker.showStartPage": false
+}

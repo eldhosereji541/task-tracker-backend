@@ -9,18 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type TaskStore interface {
-	CreateTask(task *model.Task) (*model.Task, error)
-	GetTaskByID(id string) (*model.Task, bool)
-	GetTasks(userID string, filter *model.TaskFilter) ([]*model.Task, error)
-	UpdateTask(task *model.Task) (*model.Task, error)
-	DeleteTask(id string) error
-	// user related methods
-	CreateUser(name, email, hashedPassword string) (*model.User, error)
-	GetUserByID(id string) (*model.User, bool)
-	GetUserByEmail(email string) (*model.User, string, bool)
-}
-
 type Store struct {
 	mu    sync.RWMutex
 	tasks map[string]*model.Task
@@ -29,7 +17,7 @@ type Store struct {
 	userPasswords map[string]string
 }
 
-func NewStore() TaskStore {
+func NewStore() *Store {
 	return &Store{
 		tasks:         make(map[string]*model.Task),
 		users:         make(map[string]*model.User),
@@ -39,7 +27,6 @@ func NewStore() TaskStore {
 
 // user related methods
 
-// create new user
 func (s *Store) CreateUser(name, email, hashedPassword string) (*model.User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -53,13 +40,11 @@ func (s *Store) CreateUser(name, email, hashedPassword string) (*model.User, err
 		UpdatedAt: now,
 		Deleted:   false,
 	}
-	// store user and hashed password
 	s.users[u.ID] = u
 	s.userPasswords[u.Email] = hashedPassword
 	return u, nil
 }
 
-// get user by id
 func (s *Store) GetUserByID(id string) (*model.User, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -71,7 +56,6 @@ func (s *Store) GetUserByID(id string) (*model.User, bool) {
 	return u, true
 }
 
-// get user by email
 func (s *Store) GetUserByEmail(email string) (*model.User, string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -87,7 +71,6 @@ func (s *Store) GetUserByEmail(email string) (*model.User, string, bool) {
 
 // task related methods
 
-// create new task
 func (s *Store) CreateTask(task *model.Task) (*model.Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -99,7 +82,6 @@ func (s *Store) CreateTask(task *model.Task) (*model.Task, error) {
 	return task, nil
 }
 
-// get task by id
 func (s *Store) GetTaskByID(id string) (*model.Task, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -111,7 +93,6 @@ func (s *Store) GetTaskByID(id string) (*model.Task, bool) {
 	return t, true
 }
 
-// get tasks for a user with optional filters
 func (s *Store) GetTasks(userID string, filter *model.TaskFilter) ([]*model.Task, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -121,7 +102,6 @@ func (s *Store) GetTasks(userID string, filter *model.TaskFilter) ([]*model.Task
 		if t.Deleted || t.User.ID != userID {
 			continue
 		}
-		// apply filters
 		if filter != nil {
 			if filter.Status != nil && t.Status != *filter.Status {
 				continue
@@ -139,7 +119,6 @@ func (s *Store) GetTasks(userID string, filter *model.TaskFilter) ([]*model.Task
 	return tasks, nil
 }
 
-// update task
 func (s *Store) UpdateTask(task *model.Task) (*model.Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -153,7 +132,6 @@ func (s *Store) UpdateTask(task *model.Task) (*model.Task, error) {
 	return task, nil
 }
 
-// delete task (soft delete)
 func (s *Store) DeleteTask(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

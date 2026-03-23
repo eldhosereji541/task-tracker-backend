@@ -23,7 +23,26 @@ const defaultPort = "8080"
 var cors = []string{"*"} // todo: restrict this in production to specific origins
 
 func main() {
-	// ========== Echo Server and Middleware Setup========== //
+	// Load environment variables before anything else
+	if err := godotenv.Load(); err != nil {
+		if err = godotenv.Load("../../.env"); err != nil {
+			log.Println("No .env file found, relying on environment variables")
+		}
+	}
+
+	secret := os.Getenv("JWT_SECRET")
+	if len(secret) < 32 {
+		log.Fatal("JWT_SECRET must be at least 32 characters")
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+
+	tokenSvc := auth.NewTokenService([]byte(secret))
+
+	// ========== Echo Server and Middleware Setup ========== //
 	e := echo.New()
 	e.Use(middleware.BodyLimit("32M"))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -33,11 +52,11 @@ func main() {
 	}))
 	e.Use(middleware.Secure())
 
-	// graphql setup
 	repo := store.NewStore()
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{
 		Resolvers: &graph.Resolver{
 			TaskRepo: repo,
+			TokenSvc: tokenSvc,
 		},
 	}))
 
@@ -52,34 +71,11 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
-	// GraphQL playground handler for testing and development.
+	authMw := auth.AuthMiddleware(tokenSvc)
+
 	e.GET("/", echo.WrapHandler(playground.Handler("GraphQL playground", "/query")))
-
-	// GraphQL endpoint with auth middleware
-	e.POST("/query", echo.WrapHandler(auth.AuthMiddleware(srv)))
-	e.GET("/query", echo.WrapHandler(auth.AuthMiddleware(srv)))
-
-	err := godotenv.Load()
-	if err != nil {
-		// fallback path
-		err = godotenv.Load("../../.env")
-		if err != nil {
-			log.Println("No .env file found")
-		}
-	}
-
-	// ========== Start Server ========== //
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
-	// jwt secret fetch and set
-	secret := os.Getenv("JWT_SECRET")
-	if len(secret) == 0 || len(secret) < 32 {
-		log.Fatal("JWT_SECRET environment variable is not set or invalid")
-	}
-	auth.JwtSecret = []byte(secret)
+	e.POST("/query", echo.WrapHandler(authMw(srv)))
+	e.GET("/query", echo.WrapHandler(authMw(srv)))
 
 	// todo: add graceful shutdown
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)

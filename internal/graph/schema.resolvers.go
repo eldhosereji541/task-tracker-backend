@@ -8,6 +8,8 @@ package graph
 import (
 	"context"
 	"fmt"
+	"net/mail"
+	"strings"
 	"time"
 
 	"github.com/eldhosereji541/task-tracker-backend/internal/auth"
@@ -16,6 +18,15 @@ import (
 
 // Register is the resolver for the Register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error) {
+	if strings.TrimSpace(input.Name) == "" {
+		return nil, fmt.Errorf("name cannot be empty")
+	}
+	if _, err := mail.ParseAddress(input.Email); err != nil {
+		return nil, fmt.Errorf("invalid email format")
+	}
+	if len(input.Password) < 8 {
+		return nil, fmt.Errorf("password must be at least 8 characters")
+	}
 
 	hashedPassword, err := auth.HashPassword(input.Password)
 	if err != nil {
@@ -27,8 +38,7 @@ func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInp
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	// Generate JWT token for the new user (implementation not shown here).
-	token, err := auth.GenerateToken(user.ID)
+	token, err := r.TokenSvc.GenerateToken(user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -50,7 +60,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	token, err := auth.GenerateToken(user.ID)
+	token, err := r.TokenSvc.GenerateToken(user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -63,8 +73,16 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 
 // CreateTask is the resolver for the createTask field.
 func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error) {
-	now := time.Now()
+	if strings.TrimSpace(input.Title) == "" {
+		return nil, fmt.Errorf("title cannot be empty")
+	}
 
+	userID, ok := auth.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	now := time.Now()
 	task := &model.Task{
 		Title:       input.Title,
 		Description: input.Description,
@@ -73,15 +91,7 @@ func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTas
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		Deleted:     false,
-	}
-
-	userID, ok := auth.GetUserIDFromContext(ctx)
-	if !ok {
-		return nil, fmt.Errorf("unauthorized")
-	}
-
-	task.User = &model.User{
-		ID: userID,
+		User:        &model.User{ID: userID},
 	}
 
 	return r.TaskRepo.CreateTask(task)
@@ -89,7 +99,6 @@ func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTas
 
 // UpdateTask is the resolver for the updateTask field.
 func (r *mutationResolver) UpdateTask(ctx context.Context, id string, input model.UpdateTaskInput) (*model.Task, error) {
-
 	userID, ok := auth.GetUserIDFromContext(ctx)
 	if !ok {
 		return nil, fmt.Errorf("unauthorized")
@@ -104,6 +113,9 @@ func (r *mutationResolver) UpdateTask(ctx context.Context, id string, input mode
 	}
 
 	if input.Title != nil {
+		if strings.TrimSpace(*input.Title) == "" {
+			return nil, fmt.Errorf("title cannot be empty")
+		}
 		task.Title = *input.Title
 	}
 	if input.Description != nil {
@@ -140,9 +152,17 @@ func (r *queryResolver) Tasks(ctx context.Context, filter *model.TaskFilter) ([]
 
 // Task is the resolver for the task field.
 func (r *queryResolver) Task(ctx context.Context, id string) (*model.Task, error) {
+	userID, ok := auth.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
 	task, ok := r.TaskRepo.GetTaskByID(id)
 	if !ok {
 		return nil, nil
+	}
+	if task.User == nil || task.User.ID != userID {
+		return nil, fmt.Errorf("forbidden")
 	}
 	return task, nil
 }
@@ -155,28 +175,3 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *createTaskInputResolver) Status(ctx context.Context, obj *model.CreateTaskInput, data model.TaskStatus) error {
-	panic(fmt.Errorf("not implemented: Status - status"))
-}
-func (r *createTaskInputResolver) Priority(ctx context.Context, obj *model.CreateTaskInput, data model.Priority) error {
-	panic(fmt.Errorf("not implemented: Priority - priority"))
-}
-func (r *updateTaskInputResolver) Status(ctx context.Context, obj *model.UpdateTaskInput, data *model.TaskStatus) error {
-	panic(fmt.Errorf("not implemented: Status - status"))
-}
-func (r *updateTaskInputResolver) Priority(ctx context.Context, obj *model.UpdateTaskInput, data *model.Priority) error {
-	panic(fmt.Errorf("not implemented: Priority - priority"))
-}
-func (r *Resolver) CreateTaskInput() CreateTaskInputResolver { return &createTaskInputResolver{r} }
-func (r *Resolver) UpdateTaskInput() UpdateTaskInputResolver { return &updateTaskInputResolver{r} }
-type createTaskInputResolver struct{ *Resolver }
-type updateTaskInputResolver struct{ *Resolver }
-*/
