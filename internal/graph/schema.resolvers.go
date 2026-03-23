@@ -16,7 +16,13 @@ import (
 
 // Register is the resolver for the Register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error) {
-	user, err := r.TaskRepo.CreateUser(input.Name, input.Email, input.Password)
+
+	hashedPassword, err := auth.HashPassword(input.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := r.TaskRepo.CreateUser(input.Name, input.Email, hashedPassword)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -40,9 +46,9 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	// if !auth.CheckPasswordHash(input.Password, storedPassword) {
-	// 	return nil, fmt.Errorf("invalid credentials")
-	// }
+	if !auth.CheckPasswordHash(input.Password, storedPassword) {
+		return nil, fmt.Errorf("invalid credentials")
+	}
 
 	token, err := auth.GenerateToken(user.ID)
 	if err != nil {

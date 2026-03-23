@@ -122,15 +122,17 @@ func (s *Store) GetTasks(userID string, filter *model.TaskFilter) ([]*model.Task
 			continue
 		}
 		// apply filters
-		if filter.Status != nil && t.Status != *filter.Status {
-			continue
-		}
-		if filter.Priority != nil && t.Priority != *filter.Priority {
-			continue
-		}
-		if filter.Search != nil && !strings.Contains(t.Title, *filter.Search) &&
-			(t.Description == nil || !strings.Contains(*t.Description, *filter.Search)) {
-			continue
+		if filter != nil {
+			if filter.Status != nil && t.Status != *filter.Status {
+				continue
+			}
+			if filter.Priority != nil && t.Priority != *filter.Priority {
+				continue
+			}
+			if filter.Search != nil && !strings.Contains(t.Title, *filter.Search) &&
+				(t.Description == nil || !strings.Contains(*t.Description, *filter.Search)) {
+				continue
+			}
 		}
 		tasks = append(tasks, t)
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("secret-key") // TODO: use env
+var JwtSecret = []byte("")
 
 type Claims struct {
 	UserID string `json:"userId"`
@@ -22,12 +22,12 @@ func GenerateToken(userID string) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(JwtSecret)
 }
 
 func ValidateToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return JwtSecret, nil
 	})
 	if err != nil {
 		return nil, err
